@@ -26,11 +26,7 @@ public class CategoryController extends Controller {
     private final CategoryRepository categoryRepository;
 
     @Inject
-    public CategoryController(
-            FormFactory formFactory,
-            MessagesApi messagesApi,
-            CategoryRepository categoryRepository
-    ) {
+    public CategoryController(FormFactory formFactory, MessagesApi messagesApi, CategoryRepository categoryRepository) {
         this.formFactory = formFactory;
         this.messagesApi = messagesApi;
         this.categoryRepository = categoryRepository;
@@ -47,26 +43,40 @@ public class CategoryController extends Controller {
     }
 
     public Result save(Http.Request request) {
-        Form<Category> categoryForm = formFactory.form(Category.class).bindFromRequest(request);
-
+        // Create a custom form that excludes the image field for binding
+        Map<String, String[]> formData = request.body().asFormUrlEncoded();
+        
+        // Create category object manually to avoid image field binding issues
+        Category categoryInfo = new Category();
+        
+        // Manual validation and binding
+        String name = getFormValue(formData, "name");
+        String code = getFormValue(formData, "code");
+        String description = getFormValue(formData, "description");
+        
+        Form<Category> categoryForm = formFactory.form(Category.class);
+        
+        // Validate required fields
+        if (name == null || name.trim().isEmpty()) {
+            categoryForm = categoryForm.withError("name", "Name is required");
+        }
+        if (code == null || code.trim().isEmpty()) {
+            categoryForm = categoryForm.withError("code", "Category code is required");
+        }
+        
+        // Check if form has validation errors
         if (categoryForm.hasErrors()) {
-            logger.warn("Form validation errors: {}", categoryForm.errors());
             return badRequest(
                     views.html.category.create.render(categoryForm, request, messagesApi.preferred(request))
             );
         }
         
-        Category categoryInfo = categoryForm.get();
-        
-        // Additional validation
-        if (categoryInfo.getName() == null || categoryInfo.getName().trim().isEmpty()) {
-            categoryForm = categoryForm.withError("name", "Category name cannot be empty");
-            return badRequest(
-                    views.html.category.create.render(categoryForm, request, messagesApi.preferred(request))
-            );
-        }
+        // Set the values
+        categoryInfo.setName(name.trim());
+        categoryInfo.setCode(code.trim());
+        categoryInfo.setDescription(description != null ? description.trim() : "");
 
-        // Check if category code already exists
+        // Check for duplicate category code
         List<Category> existingCategories = categoryRepository.findAll();
         for (Category existing : existingCategories) {
             if (existing.getCode().equals(categoryInfo.getCode())) {
@@ -114,42 +124,58 @@ public class CategoryController extends Controller {
     }
 
     public Result update(Http.Request request, Long id) {
-        Form<Category> categoryForm = formFactory.form(Category.class).bindFromRequest(request);
+        // Similar approach for update - manual binding to avoid image field issues
+        Map<String, String[]> formData = request.body().asFormUrlEncoded();
+        
+        Category category = categoryRepository.findById(id).orElse(null);
+        if (category == null) {
+            return notFound("Category not found");
+        }
+        
+        Form<Category> categoryForm = formFactory.form(Category.class);
+        
+        // Manual validation and binding
+        String name = getFormValue(formData, "name");
+        String code = getFormValue(formData, "code");
+        String description = getFormValue(formData, "description");
+        
+        // Validate required fields
+        if (name == null || name.trim().isEmpty()) {
+            categoryForm = categoryForm.withError("name", "Name is required");
+        }
+        if (code == null || code.trim().isEmpty()) {
+            categoryForm = categoryForm.withError("code", "Category code is required");
+        }
+        
         if (categoryForm.hasErrors()) {
             return badRequest(views.html.category.edit.render(categoryForm, id, request, messagesApi.preferred(request)));
         }
 
-        Category updatedCategory = categoryForm.get();
-        Category existingCategory = categoryRepository.findById(id)
-                .orElse(null);
-
-        if (existingCategory == null) {
-            return notFound("Category not found");
-        }
-
         try {
+            // Store old image path for cleanup
+            String oldImagePath = category.getImage();
+            
             // Update basic fields
-            existingCategory.setName(updatedCategory.getName());
-            existingCategory.setDescription(updatedCategory.getDescription());
-            existingCategory.setCode(updatedCategory.getCode());
-
-            // Handle image upload for update
+            category.setName(name.trim());
+            category.setCode(code.trim());
+            category.setDescription(description != null ? description.trim() : "");
+            
+            // Handle image upload
             ImageUploadResult uploadResult = handleImageUpload(request);
             if (uploadResult.hasError()) {
                 categoryForm = categoryForm.withError("image", uploadResult.getErrorMessage());
                 return badRequest(views.html.category.edit.render(categoryForm, id, request, messagesApi.preferred(request)));
             }
             
+            // If new image uploaded, update and cleanup old image
             if (uploadResult.getImagePath() != null) {
-                // Delete old image if exists
-                if (existingCategory.getImage() != null && !existingCategory.getImage().isEmpty()) {
-                    deleteOldImage(existingCategory.getImage());
-                }
-                existingCategory.setImage(uploadResult.getImagePath());
+                category.setImage(uploadResult.getImagePath());
+                // Delete old image file
+                deleteOldImage(oldImagePath);
             }
 
-            categoryRepository.update(existingCategory);
-            logger.info("Category updated successfully: {}", existingCategory.getName());
+            categoryRepository.update(category);
+            logger.info("Category updated successfully: {}", category.getName());
             return redirect(routes.CategoryController.index()).flashing("success", "Category updated successfully!");
             
         } catch (Exception e) {
@@ -179,6 +205,14 @@ public class CategoryController extends Controller {
     }
 
     /**
+     * Helper method to get form value safely
+     */
+    private String getFormValue(Map<String, String[]> formData, String key) {
+        String[] values = formData.get(key);
+        return (values != null && values.length > 0) ? values[0] : null;
+    }
+
+    /**
      * Handle image upload and return the result with path or error
      */
     private ImageUploadResult handleImageUpload(Http.Request request) {
@@ -193,9 +227,10 @@ public class CategoryController extends Controller {
         }
 
         String originalFilename = filePart.getFilename();
-        String fileExtension = getFileExtension(originalFilename);
-        
+        logger.info("Processing uploaded file: {}", originalFilename);
+
         // Validate file type
+        String fileExtension = getFileExtension(originalFilename);
         if (!isValidImageFile(fileExtension)) {
             return new ImageUploadResult(null, "Invalid file type. Please upload jpg, jpeg, png, gif, bmp, or webp files only.");
         }
@@ -283,10 +318,14 @@ public class CategoryController extends Controller {
     }
 
     /**
-     * Sanitize filename to remove special characters
+     * Sanitize filename to remove dangerous characters
      */
     private String sanitizeFilename(String filename) {
-        return filename.replaceAll("[^a-zA-Z0-9.-]", "_");
+        if (filename == null) {
+            return "unknown";
+        }
+        // Remove any path separators and special characters, keep only alphanumeric, dots, hyphens, underscores
+        return filename.replaceAll("[^a-zA-Z0-9._-]", "_");
     }
 
     /**
