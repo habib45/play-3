@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Image Upload</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .form-group { margin: 20px 0; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"], textarea { width: 300px; padding: 8px; }
+        input[type="file"] { padding: 8px; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>Test Category Image Upload</h1>
+    
+    <form action="http://localhost:9000/categories/save" method="post" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="name">Category Name:</label>
+            <input type="text" id="name" name="name" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="code">Category Code:</label>
+            <input type="text" id="code" name="code" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="description">Description:</label>
+            <textarea id="description" name="description" rows="4"></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="image">Category Image:</label>
+            <input type="file" id="image" name="image" accept="image/*">
+            <small>Supported formats: JPG, JPEG, PNG, GIF, BMP, WebP (Max 5MB)</small>
+        </div>
+        
+        <div class="form-group">
+            <button type="submit">Upload Category</button>
+        </div>
+    </form>
+    
+    <h2>Instructions:</h2>
+    <ol>
+        <li>Start your Play application: <code>sbt run</code></li>
+        <li>Fill out the form above</li>
+        <li>Select an image file</li>
+        <li>Click "Upload Category"</li>
+        <li>Check the console for any error messages</li>
+        <li>Check <code>public/uploads/categories/</code> for uploaded files</li>
+    </ol>
+    
+    <h2>Debug Steps:</h2>
+    <ul>
+        <li>Open browser developer tools (F12)</li>
+        <li>Go to Network tab</li>
+        <li>Submit the form</li>
+        <li>Check the request details and response</li>
+    </ul>
+</body>
+</html>
