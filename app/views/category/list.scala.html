@@ -96,10 +96,10 @@
                                     <span class="checkmarks"></span>
                                 </label>
                             </th>
+                            <th>Image</th>
                             <th>Category name</th>
                             <th>Category Code</th>
                             <th>Description</th>
-                            <th>Created By</th>
                             <th>Action</th>
                         </tr>
                         </thead>
@@ -112,16 +112,21 @@
                                     <span class="checkmarks"></span>
                                 </label>
                             </td>
+                            <td>
+                                @if(category.image != null && !category.image.isEmpty()) {
+                                    <img src="@category.image" alt="@category.name" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
+                                } else {
+                                    <img src="@routes.Assets.versioned("assets/img/icons/product.svg")" alt="No image" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
+                                }
+                            </td>
                             <td>@category.name</td>
+                            <td>@category.code</td>
                             <td>@category.description</td>
-                            <td>category.createdAt</td>
-                            <td>Admin</td>
                             <td>
                                 <a class="me-3" href="@routes.CategoryController.edit(category.id)">
                                     <img src="@routes.Assets.versioned("assets/img/icons/edit.svg")" alt="img">
                                 </a>
                                 <a class="me-3 confirm-text" href="@routes.CategoryController.delete(category.id)">
-<!--                                    routes.CategoryController.delete(category.id)-->
                                     <img src="@routes.Assets.versioned("assets/img/icons/delete.svg")" alt="img">
                                 </a>
                             </td>
