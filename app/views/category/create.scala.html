@@ -1,0 +1,92 @@
+@(categoryForm: play.data.Form[models.Category])(implicit request: play.mvc.Http.Request, messages: play.i18n.Messages)
+@import helper._
+
+@main("Create Category") {
+
+<div class="page-wrapper">
+
+
+
+    <div class="content">
+        <div class="page-header">
+            <div class="page-title">
+                <h4>Product Add Category</h4>
+                <h6>Create new product Category</h6>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+
+                @helper.form(action = routes.CategoryController.save(),Symbol("enctype") -> "multipart/form-data") {
+                @CSRF.formField
+                @* Show global errors *@
+                @categoryForm.error("name").ifPresent { error =>
+                <span class="text-danger">@error.message</span>
+                }
+                <p>Errors: @categoryForm.errors().asScala.mkString(", ")</p>
+
+                @categoryForm.error("name").map { error =>
+                <div>@error.message</div>
+                }
+
+                @if(categoryForm.hasErrors) {
+                <div class="alert alert-danger">
+                    @for(error <- categoryForm.errors.asScala) {
+                    <p>@error.message</p>
+                    }
+                </div>
+                }
+                <div class="row">
+                    <div class="col-lg-6 col-sm-6 col-12">
+                        <div class="form-group">
+                            <label>Category Name</label>
+                            <input type="text" name="name" >
+                        </div>
+                    </div>
+                    <div class="col-lg-6 col-sm-6 col-12">
+                        <div class="form-group">
+                            <label>Category Code</label>
+                            <input type="text" name="code">
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea class="form-control" name="description"></textarea>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="form-group">
+                            <label> Product Image</label>
+                            <div class="image-upload">
+                                <input type="file" name="image">
+                                <div class="image-uploads">
+                                    <img src="@routes.Assets.versioned("assets/img/icons/upload.svg")" alt="img">
+                                    <h4>Drag and drop a file to upload</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <button type="submit" class="btn btn-submit me-2">Submit</button>
+                        <button type="reset" class="btn btn-cancel">Cancel</button>
+                    </div>
+                </div>
+                }
+            </div>
+        </div>
+
+    </div>
+
+
+    <div class="content">
+
+
+<!--        @helper.inputText(categoryForm("name"), Symbol("class") -> "form-control")-->
+<!--        @helper.inputText(categoryForm("description"), Symbol("class") -> "form-control")-->
+<!--<button type="submit" class="btn btn-primary mt-2">Save</button>-->
+
+    </div>
+</div>
+}

@@ -1,0 +1,16 @@
+@(categoryForm: play.data.Form[models.Category], id: Long)(implicit request: play.mvc.Http.Request, messages: play.i18n.Messages)
+
+@import helper._
+
+@main("Edit Category") {
+<h1>Edit Category</h1>
+<div class="page-wrapper">
+    <div class="content">
+@helper.form(action = routes.CategoryController.update(id)) {
+        @CSRF.formField
+@helper.inputText(categoryForm("name"), Symbol("class") -> "form-control")
+<button type="submit" class="btn btn-primary mt-2">Update</button>
+}
+    </div>
+</div>
+}
