@@ -3,14 +3,74 @@
 @import helper._
 
 @main("Edit Category") {
-<h1>Edit Category</h1>
 <div class="page-wrapper">
     <div class="content">
-@helper.form(action = routes.CategoryController.update(id)) {
-        @CSRF.formField
-@helper.inputText(categoryForm("name"), Symbol("class") -> "form-control")
-<button type="submit" class="btn btn-primary mt-2">Update</button>
-}
+        <div class="page-header">
+            <div class="page-title">
+                <h4>Edit Category</h4>
+                <h6>Update category information</h6>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                @helper.form(action = routes.CategoryController.update(id), Symbol("enctype") -> "multipart/form-data") {
+                    @CSRF.formField
+                    
+                    @if(categoryForm.hasErrors) {
+                        <div class="alert alert-danger">
+                            @for(error <- categoryForm.errors.asScala) {
+                                <p>@error.message</p>
+                            }
+                        </div>
+                    }
+                    
+                    <div class="row">
+                        <div class="col-lg-6 col-sm-6 col-12">
+                            <div class="form-group">
+                                <label>Category Name</label>
+                                <input type="text" name="name" class="form-control" value="@categoryForm("name").value().orElse("")">
+                            </div>
+                        </div>
+                        <div class="col-lg-6 col-sm-6 col-12">
+                            <div class="form-group">
+                                <label>Category Code</label>
+                                <input type="text" name="code" class="form-control" value="@categoryForm("code").value().orElse("")">
+                            </div>
+                        </div>
+                        <div class="col-lg-12">
+                            <div class="form-group">
+                                <label>Description</label>
+                                <textarea class="form-control" name="description">@categoryForm("description").value().orElse("")</textarea>
+                            </div>
+                        </div>
+                        <div class="col-lg-12">
+                            <div class="form-group">
+                                <label>Category Image</label>
+                                @if(categoryForm("image").value().isDefined && !categoryForm("image").value().get().isEmpty()) {
+                                    <div class="current-image mb-3">
+                                        <p>Current Image:</p>
+                                        <img src="@categoryForm("image").value().get()" alt="Current category image" style="max-width: 200px; max-height: 200px; object-fit: cover;">
+                                    </div>
+                                }
+                                <div class="image-upload">
+                                    <input type="file" name="image" accept="image/*">
+                                    <div class="image-uploads">
+                                        <img src="@routes.Assets.versioned("assets/img/icons/upload.svg")" alt="img">
+                                        <h4>Drag and drop a file to upload</h4>
+                                        <p>Choose a new image to replace the current one</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-12">
+                            <button type="submit" class="btn btn-submit me-2">Update</button>
+                            <a href="@routes.CategoryController.index()" class="btn btn-cancel">Cancel</a>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
     </div>
 </div>
 }

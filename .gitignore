@@ -7,3 +7,7 @@ target
 /.project
 /.settings
 /RUNNING_PID
+
+# Uploaded files (but keep directory structure)
+public/uploads/categories/*
+!public/uploads/categories/.gitkeep
