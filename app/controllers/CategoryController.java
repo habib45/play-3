@@ -6,7 +6,6 @@ import play.data.FormFactory;
 import play.i18n.MessagesApi;
 import play.mvc.*;
 import repositories.CategoryRepository;
-//import validators.CategoryValidator;
 import javax.inject.Inject;
 import java.util.List;
 import java.nio.file.Paths;
@@ -16,13 +15,15 @@ import java.util.Map;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.io.IOException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CategoryController extends Controller {
 
+    private static final Logger logger = LoggerFactory.getLogger(CategoryController.class);
     private final FormFactory formFactory;
     private final MessagesApi messagesApi;
     private final CategoryRepository categoryRepository;
-//    private final CategoryValidator validator;
 
     @Inject
     public CategoryController(
@@ -43,13 +44,13 @@ public class CategoryController extends Controller {
     public Result createCategory(Http.Request request) {
         Form<Category> form = formFactory.form(Category.class);
         return ok(views.html.category.create.render(form, request, messagesApi.preferred(request)));
-
     }
 
     public Result save(Http.Request request) {
         Form<Category> categoryForm = formFactory.form(Category.class).bindFromRequest(request);
 
         if (categoryForm.hasErrors()) {
+            logger.warn("Form validation errors: {}", categoryForm.errors());
             return badRequest(
                     views.html.category.create.render(categoryForm, request, messagesApi.preferred(request))
             );
@@ -57,18 +58,50 @@ public class CategoryController extends Controller {
         
         Category categoryInfo = categoryForm.get();
         
+        // Additional validation
         if (categoryInfo.getName() == null || categoryInfo.getName().trim().isEmpty()) {
-            return badRequest("Category name cannot be empty.");
+            categoryForm = categoryForm.withError("name", "Category name cannot be empty");
+            return badRequest(
+                    views.html.category.create.render(categoryForm, request, messagesApi.preferred(request))
+            );
         }
 
-        // Handle file upload
-        String imagePath = handleImageUpload(request);
-        if (imagePath != null) {
-            categoryInfo.setImage(imagePath);
+        // Check if category code already exists
+        List<Category> existingCategories = categoryRepository.findAll();
+        for (Category existing : existingCategories) {
+            if (existing.getCode().equals(categoryInfo.getCode())) {
+                categoryForm = categoryForm.withError("code", "Category code already exists");
+                return badRequest(
+                        views.html.category.create.render(categoryForm, request, messagesApi.preferred(request))
+                );
+            }
         }
 
-        categoryRepository.save(categoryInfo);
-        return redirect(routes.CategoryController.createCategory());
+        try {
+            // Handle file upload
+            ImageUploadResult uploadResult = handleImageUpload(request);
+            if (uploadResult.hasError()) {
+                categoryForm = categoryForm.withError("image", uploadResult.getErrorMessage());
+                return badRequest(
+                        views.html.category.create.render(categoryForm, request, messagesApi.preferred(request))
+                );
+            }
+            
+            if (uploadResult.getImagePath() != null) {
+                categoryInfo.setImage(uploadResult.getImagePath());
+            }
+
+            categoryRepository.save(categoryInfo);
+            logger.info("Category created successfully: {}", categoryInfo.getName());
+            return redirect(routes.CategoryController.index()).flashing("success", "Category created successfully!");
+            
+        } catch (Exception e) {
+            logger.error("Error saving category", e);
+            categoryForm = categoryForm.withError("", "An error occurred while saving the category");
+            return badRequest(
+                    views.html.category.create.render(categoryForm, request, messagesApi.preferred(request))
+            );
+        }
     }
 
     public Result edit(Http.Request request, Long id) {
@@ -88,56 +121,75 @@ public class CategoryController extends Controller {
 
         Category updatedCategory = categoryForm.get();
         Category existingCategory = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+                .orElse(null);
 
         if (existingCategory == null) {
             return notFound("Category not found");
         }
 
-        // Update basic fields
-        existingCategory.setName(updatedCategory.getName());
-        existingCategory.setDescription(updatedCategory.getDescription());
-        existingCategory.setCode(updatedCategory.getCode());
+        try {
+            // Update basic fields
+            existingCategory.setName(updatedCategory.getName());
+            existingCategory.setDescription(updatedCategory.getDescription());
+            existingCategory.setCode(updatedCategory.getCode());
 
-        // Handle image upload for update
-        String imagePath = handleImageUpload(request);
-        if (imagePath != null) {
-            // Delete old image if exists
-            if (existingCategory.getImage() != null && !existingCategory.getImage().isEmpty()) {
-                deleteOldImage(existingCategory.getImage());
+            // Handle image upload for update
+            ImageUploadResult uploadResult = handleImageUpload(request);
+            if (uploadResult.hasError()) {
+                categoryForm = categoryForm.withError("image", uploadResult.getErrorMessage());
+                return badRequest(views.html.category.edit.render(categoryForm, id, request, messagesApi.preferred(request)));
             }
-            existingCategory.setImage(imagePath);
-        }
+            
+            if (uploadResult.getImagePath() != null) {
+                // Delete old image if exists
+                if (existingCategory.getImage() != null && !existingCategory.getImage().isEmpty()) {
+                    deleteOldImage(existingCategory.getImage());
+                }
+                existingCategory.setImage(uploadResult.getImagePath());
+            }
 
-        categoryRepository.update(existingCategory);
-        return redirect(routes.CategoryController.index());
+            categoryRepository.update(existingCategory);
+            logger.info("Category updated successfully: {}", existingCategory.getName());
+            return redirect(routes.CategoryController.index()).flashing("success", "Category updated successfully!");
+            
+        } catch (Exception e) {
+            logger.error("Error updating category", e);
+            categoryForm = categoryForm.withError("", "An error occurred while updating the category");
+            return badRequest(views.html.category.edit.render(categoryForm, id, request, messagesApi.preferred(request)));
+        }
     }
 
     public Result delete(Http.Request request, Long id) {
-        Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Category not found"));
-        if (category != null) {
-            // Delete associated image file
-            if (category.getImage() != null && !category.getImage().isEmpty()) {
-                deleteOldImage(category.getImage());
+        try {
+            Category category = categoryRepository.findById(id).orElse(null);
+            if (category != null) {
+                // Delete associated image file
+                if (category.getImage() != null && !category.getImage().isEmpty()) {
+                    deleteOldImage(category.getImage());
+                }
+                category.delete();
+                logger.info("Category deleted successfully: {}", category.getName());
+                return redirect(routes.CategoryController.index()).flashing("success", "Category deleted successfully!");
             }
-            category.delete();
+            return redirect(routes.CategoryController.index()).flashing("error", "Category not found!");
+        } catch (Exception e) {
+            logger.error("Error deleting category", e);
+            return redirect(routes.CategoryController.index()).flashing("error", "An error occurred while deleting the category");
         }
-        return redirect(routes.CategoryController.index());
     }
 
     /**
-     * Handle image upload and return the path to be stored in database
+     * Handle image upload and return the result with path or error
      */
-    private String handleImageUpload(Http.Request request) {
+    private ImageUploadResult handleImageUpload(Http.Request request) {
         Http.MultipartFormData<TemporaryFile> body = request.body().asMultipartFormData();
         if (body == null) {
-            return null;
+            return new ImageUploadResult(null, null); // No file uploaded
         }
 
         Http.MultipartFormData.FilePart<TemporaryFile> filePart = body.getFile("image");
         if (filePart == null || filePart.getFilename() == null || filePart.getFilename().isEmpty()) {
-            return null;
+            return new ImageUploadResult(null, null); // No file uploaded
         }
 
         String originalFilename = filePart.getFilename();
@@ -145,18 +197,32 @@ public class CategoryController extends Controller {
         
         // Validate file type
         if (!isValidImageFile(fileExtension)) {
-            // You might want to add this error to the form instead
-            return null;
+            return new ImageUploadResult(null, "Invalid file type. Please upload jpg, jpeg, png, gif, bmp, or webp files only.");
+        }
+
+        // Check file size (limit to 5MB)
+        try {
+            long fileSize = Files.size(filePart.getRef().path());
+            if (fileSize > 5 * 1024 * 1024) { // 5MB
+                return new ImageUploadResult(null, "File size too large. Maximum allowed size is 5MB.");
+            }
+        } catch (IOException e) {
+            logger.error("Error checking file size", e);
+            return new ImageUploadResult(null, "Error processing file.");
         }
 
         try {
             // Create unique filename
-            String fileName = System.currentTimeMillis() + "_" + originalFilename.replaceAll("[^a-zA-Z0-9.-]", "_");
+            String fileName = System.currentTimeMillis() + "_" + sanitizeFilename(originalFilename);
             
             // Ensure upload directory exists
             File uploadDir = new File("public/uploads/categories");
             if (!uploadDir.exists()) {
-                uploadDir.mkdirs();
+                boolean created = uploadDir.mkdirs();
+                if (!created) {
+                    logger.error("Failed to create upload directory: {}", uploadDir.getAbsolutePath());
+                    return new ImageUploadResult(null, "Failed to create upload directory.");
+                }
             }
             
             File targetFile = new File(uploadDir, fileName);
@@ -164,13 +230,14 @@ public class CategoryController extends Controller {
             // Copy the uploaded file to target location
             Files.copy(filePart.getRef().path(), targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
             
+            logger.info("File uploaded successfully: {}", targetFile.getAbsolutePath());
+            
             // Return the web-accessible path
-            return "/assets/uploads/categories/" + fileName;
+            return new ImageUploadResult("/assets/uploads/categories/" + fileName, null);
             
         } catch (IOException e) {
-            // Log the error
-            play.Logger.of(CategoryController.class).error("Error uploading file", e);
-            return null;
+            logger.error("Error uploading file", e);
+            return new ImageUploadResult(null, "Error uploading file: " + e.getMessage());
         }
     }
 
@@ -182,7 +249,12 @@ public class CategoryController extends Controller {
             String fileName = imagePath.substring("/assets/uploads/categories/".length());
             File oldFile = new File("public/uploads/categories/" + fileName);
             if (oldFile.exists()) {
-                oldFile.delete();
+                boolean deleted = oldFile.delete();
+                if (deleted) {
+                    logger.info("Old image deleted: {}", oldFile.getAbsolutePath());
+                } else {
+                    logger.warn("Failed to delete old image: {}", oldFile.getAbsolutePath());
+                }
             }
         }
     }
@@ -208,5 +280,37 @@ public class CategoryController extends Controller {
             }
         }
         return false;
+    }
+
+    /**
+     * Sanitize filename to remove special characters
+     */
+    private String sanitizeFilename(String filename) {
+        return filename.replaceAll("[^a-zA-Z0-9.-]", "_");
+    }
+
+    /**
+     * Inner class to handle image upload results
+     */
+    private static class ImageUploadResult {
+        private final String imagePath;
+        private final String errorMessage;
+
+        public ImageUploadResult(String imagePath, String errorMessage) {
+            this.imagePath = imagePath;
+            this.errorMessage = errorMessage;
+        }
+
+        public String getImagePath() {
+            return imagePath;
+        }
+
+        public String getErrorMessage() {
+            return errorMessage;
+        }
+
+        public boolean hasError() {
+            return errorMessage != null;
+        }
     }
 }
