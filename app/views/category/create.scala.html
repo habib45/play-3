@@ -20,34 +20,31 @@
 
                 @helper.form(action = routes.CategoryController.save(),Symbol("enctype") -> "multipart/form-data") {
                 @CSRF.formField
-                @* Show global errors *@
-                @categoryForm.error("name").ifPresent { error =>
-                <span class="text-danger">@error.message</span>
-                }
-                <p>Errors: @categoryForm.errors().asScala.mkString(", ")</p>
-
-                @categoryForm.error("name").map { error =>
-                <div>@error.message</div>
-                }
-
-                @if(categoryForm.hasErrors) {
-                <div class="alert alert-danger">
-                    @for(error <- categoryForm.errors.asScala) {
-                    <p>@error.message</p>
-                    }
-                </div>
-                }
+<!--                @if(categoryForm.hasErrors) {-->
+<!--                <div class="alert alert-danger">-->
+<!--                    @for(error <- categoryForm.errors.asScala) {-->
+<!--                    <p>@error.message</p>-->
+<!--                    }-->
+<!--                </div>-->
+<!--                }-->
                 <div class="row">
                     <div class="col-lg-6 col-sm-6 col-12">
                         <div class="form-group">
                             <label>Category Name</label>
                             <input type="text" name="name" >
+                            @categoryForm.error("name").map { error =>
+                            <div class="text-danger">@error.message</div>
+                            }
                         </div>
+
                     </div>
                     <div class="col-lg-6 col-sm-6 col-12">
                         <div class="form-group">
                             <label>Category Code</label>
                             <input type="text" name="code">
+                            @categoryForm.error("code").map { error =>
+                            <div class="text-danger">@error.message</div>
+                            }
                         </div>
                     </div>
                     <div class="col-lg-12">
@@ -66,6 +63,10 @@
                                     <h4>Drag and drop a file to upload</h4>
                                 </div>
                             </div>
+
+                            @categoryForm.error("image").map { error =>
+                            <div class="text-danger">@error.message</div>
+                            }
                         </div>
                     </div>
                     <div class="col-lg-12">

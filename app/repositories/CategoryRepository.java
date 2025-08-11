@@ -24,8 +24,14 @@ public class CategoryRepository implements BaseRepository {
     }
 
     @Override
-    public void save(Category category) {
+    public boolean save(Category category) {
+        try{
         category.save();
+        return true;
+    } catch (Exception e) {
+        e.printStackTrace();
+        return false;
+    }
     }
 
     @Override

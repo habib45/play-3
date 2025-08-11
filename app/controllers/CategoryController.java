@@ -54,23 +54,31 @@ public class CategoryController extends Controller {
         }
         Category categoryInfo = categoryForm.get();
         // Handle file upload
-        Http.MultipartFormData<TemporaryFile> body = request.body().asMultipartFormData();
-        Http.MultipartFormData.FilePart<TemporaryFile> filePart = body.getFile("image");
-        if (filePart != null) {
-            String fileName = System.currentTimeMillis() + "_" + filePart.getFilename();
-            String uploadPath = "public/uploads/categories/" + fileName;
-            filePart.getRef().copyTo(new java.io.File(uploadPath), true);
-            categoryInfo.setImage("/assets/uploads/categories/" + fileName);
-        }
+        // Http.MultipartFormData<TemporaryFile> body = request.body().asMultipartFormData();
+        // Http.MultipartFormData.FilePart<TemporaryFile> filePart = body.getFile("image");
+        // if (filePart != null) {
+        //     String fileName = System.currentTimeMillis() + "_" + filePart.getFilename();
+        //     String uploadPath = "public/uploads/categories/" + fileName;
+        //     filePart.getRef().copyTo(new java.io.File(uploadPath), true);
+        //     categoryInfo.setImage("/assets/uploads/categories/" + fileName);
+        // }
+        System.out.println(categoryInfo);
 
-
-
-        if (categoryInfo.getName() == null || categoryInfo.getName().trim().isEmpty()) {
-            return badRequest("Category name cannot be empty.");
-        }
+//        if (categoryInfo.getName() == null || categoryInfo.getName().trim().isEmpty()) {
+//            return badRequest("Category name cannot be empty.");
+//        }
+        categoryInfo.setImage("ABC");
 //        System.out.println("Category Name: " + category.getName());
-        categoryRepository.save(categoryInfo);
-        return redirect(routes.CategoryController.createCategory());
+        boolean saveResult = categoryRepository.save(categoryInfo);
+        if(saveResult) {
+//            flash("success", "Category successfully save");
+            return redirect(routes.CategoryController.index())
+                    .flashing("success", "Category saved successfully!");
+        }else{
+//            flash("error", "Unable to save category. Please try again.");
+            return redirect(routes.CategoryController.createCategory())
+                    .flashing("error", "Unable to save category. Please try again.");
+        }
     }
 
     public Result edit(Http.Request request, Long id) {

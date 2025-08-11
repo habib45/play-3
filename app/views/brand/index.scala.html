@@ -1,0 +1,73 @@
+@(brandes:List[Brand])
+
+@main("Brand") {
+
+<h1>Brands</h1>
+<div class="page-wrapper">
+    <div class="content">
+        <div class="page-header">
+            <div class="page-title">
+                <h4>Brand List</h4>
+                <h6>Manage your Brand</h6>
+            </div>
+            <div class="page-btn">
+                <a href="@routes.BrandController.add" class="btn btn-added">
+                    <img src="@routes.Assets.versioned("assets/img/icons/plus.svg")")" class="me-1" alt="img">Add Brand
+                </a>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table datanew">
+                        <thead>
+                        <tr>
+                            <th>
+                                <label class="checkboxs">
+                                    <input type="checkbox" id="select-all">
+                                    <span class="checkmarks"></span>
+                                </label>
+                            </th>
+                            <th>Image</th>
+                            <th>Brand Name</th>
+                            <th>Brand Description</th>
+                            <th>Action</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @for(brand <- brandes) {
+                        <tr>
+                            <td>
+                                <label class="checkboxs">
+                                    <input type="checkbox">
+                                    <span class="checkmarks"></span>
+                                </label>
+                            </td>
+                            <td>
+                                <a class="product-img">
+                                    <img src="@routes.Assets.versioned("assets/img/brand/adidas.png")" alt="product">
+                                </a>
+                            </td>
+                            <td>@brand.name</td>
+                            <td>@brand.description</td>
+                            <td>
+                                <a class="me-3" href="editbrand.html">
+                                    <img src="@routes.Assets.versioned("assets/img/icons/edit.svg")" alt="img">
+                                </a>
+                                <a class="me-3 confirm-text" href="javascript:void(0);">
+                                    <img src="@routes.Assets.versioned("assets/img/icons/delete.svg")" alt="img">
+                                </a>
+                            </td>
+                        </tr>
+                        }
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+}

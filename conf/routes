@@ -14,6 +14,20 @@ GET     /categories/:id/edit        controllers.CategoryController.edit(request:
 POST    /categories/:id/update      controllers.CategoryController.update(request: play.mvc.Http.Request, id: Long)
 GET     /categories/:id/delete      controllers.CategoryController.delete(request: play.mvc.Http.Request, id: Long)
 
+# Sub Category
+
+GET     /sub-categories           controllers.SubCategoryController.subCategory
+
+GET     /products                 controllers.ProductController.products
+GET     /products/add             controllers.ProductController.add
+POST    /products                 controllers.ProductController.save
+POST    /product/save             controllers.ProductController.saveProduct
+GET    /product/import             controllers.ProductController.importProduct
+
+
+GET     /brands                   controllers.BrandController.index
+GET     /brands/add               controllers.BrandController.add
+POST    /brands/save              controllers.BrandController.saveBrand
 
 # Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
+GET     /assets/*file             controllers.Assets.versioned(path="/public", file: Asset)

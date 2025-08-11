@@ -1,0 +1,145 @@
+@import play.api.mvc.RequestHeader
+@(brandes: List[models.Brand])(implicit request: RequestHeader)
+
+
+@main("Add Product") {
+<div class="page-wrapper">
+    <div class="content">
+        <div class="page-header">
+            <div class="page-title">
+                <h4>Product Add</h4>
+                <h6>Create new product</h6>
+            </div>
+        </div>
+        @helper.form(action = routes.ProductController.saveProduct) {
+<!--        <form action="@routes.ProductController.save" method="POST">-->
+            @helper.CSRF.formField
+            <div class="card">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-lg-3 col-sm-6 col-12">
+                        <div class="form-group">
+                            <label>Product Name</label>
+                            <input type="text" name="name">
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-6 col-12">
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select class="select select2" name="category">
+                                <option>Choose Category</option>
+                                <option value="Computers">Computers</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-6 col-12">
+                        <div class="form-group">
+                            <label>Sub Category</label>
+                            <select class="select" name="sub_category">
+                                <option>Choose Sub Category</option>
+                                <option value="Fruits">Fruits</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-6 col-12">
+                        <div class="form-group">
+                            <label>Brand</label>
+                            <select class="select" name="brand">
+                                <option>Choose Brand</option>
+                                @for(brand <- brandes){
+                                <option value="@brand.id">@brand.name</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-6 col-12">
+                        <div class="form-group">
+                            <label>Unit</label>
+                            <select class="select" name="unit">
+                                <option>Choose Unit</option>
+                                <option value="Unit">Unit</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-6 col-12">
+                        <div class="form-group">
+                            <label>SKU</label>
+                            <input type="text" name="sku">
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-6 col-12">
+                        <div class="form-group">
+                            <label>Minimum Qty</label>
+                            <input type="text" name="minimum_qty">
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-6 col-12">
+                        <div class="form-group">
+                            <label>Quantity</label>
+                            <input type="text" name="quantity">
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea class="form-control" name="description"></textarea>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-6 col-12">
+                        <div class="form-group">
+                            <label>Tax</label>
+                            <select class="select" name="tax">
+                                <option>Choose Tax</option>
+                                <option value="2">2%</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-6 col-12">
+                        <div class="form-group">
+                            <label>Discount Type</label>
+                            <select class="select" name="discount_type">
+                                <option>Percentage</option>
+                                <option value="10"> 10%</option>
+                                <option value="20">20%</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-6 col-12">
+                        <div class="form-group">
+                            <label>Price</label>
+                            <input type="text" name="price">
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-6 col-12">
+                        <div class="form-group">
+                            <label> Status</label>
+                            <select class="select" name="status">
+                                <option value="0">Closed</option>
+                                <option value="1">Open</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="form-group">
+                            <label> Product Image</label>
+                            <div class="image-upload">
+                                <input type="file" name="product_image">
+                                <div class="image-uploads">
+                                    <img src="@routes.Assets.versioned("assets/img/icons/upload.svg")" alt="img">
+                                    <h4>Drag and drop a file to upload</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <button type="submit" class="btn btn-submit me-2">Submit</button>
+                        <button href="productlist.html" class="btn btn-cancel">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        }
+<!--        </form>-->
+    </div>
+</div>
+}

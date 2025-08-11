@@ -10,7 +10,7 @@ public interface BaseRepository {
 
     Optional<Category> findById(Long id);
 
-    void save(Category category);
+    boolean save(Category category);
 
     void update(Category category);
 

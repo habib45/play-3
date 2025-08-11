@@ -239,19 +239,19 @@
 <!--                  alt="img"><span> Dashboard</span> </a>-->
 <!--            </li>-->
             <li class="submenu">
-              <a href="javascript:void(0);"><img src="routes.Assets.versioned("assets/img/icons/product.svg")"
+              <a href="javascript:void(0);"><img src="@routes.Assets.versioned("assets/img/icons/product.svg")"
                   alt="img"><span> Product</span> <span class="menu-arrow"></span></a>
               <ul>
-<!--                <li><a href="routes.ProductController.products">Product List</a></li>-->
-<!--                <li><a href="routes.ProductController.addProduct">Add Product</a></li>-->
-                <li><a href="categorylist.html">Category List</a></li>
-                <li><a href="addcategory.html">Add Category</a></li>
-                <li><a href="subcategorylist.html">Sub Category List</a></li>
-                <li><a href="subaddcategory.html">Add Sub Category</a></li>
-                <li><a href="brandlist.html">Brand List</a></li>
-                <li><a href="addbrand.html">Add Brand</a></li>
-                <li><a href="importproduct.html">Import Products</a></li>
-                <li><a href="barcode.html">Print Barcode</a></li>
+                <li><a href="@routes.ProductController.products">Product List</a></li>
+                <li><a href="@routes.ProductController.add">Add Product</a></li>
+                <li><a href="@routes.CategoryController.index">Category List</a></li>
+                <li><a href="@routes.CategoryController.createCategory">Add Category</a></li>
+                <li><a href="@routes.SubCategoryController.subCategory">Sub Category List</a></li>
+<!--                <li><a href="subaddcategory.html">Add Sub Category</a></li>-->
+                <li><a href="@routes.BrandController.index">Brand List</a></li>
+                <li><a href="@routes.BrandController.add">Add Brand</a></li>
+                <li><a href="@routes.ProductController.importProduct">Import Products</a></li>
+                <li><a href="#">Print Barcode</a></li>
               </ul>
             </li>
             <li class="submenu">

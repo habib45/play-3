@@ -1,0 +1,79 @@
+@(products: List[models.Product])
+
+@main("Product") {
+
+<h1>Product</h1>
+<div class="page-wrapper">
+    <div class="content">
+        <div class="page-header">
+            <div class="page-title">
+                <h4>Product list</h4>
+                <h6>View/Search product</h6>
+            </div>
+            <div class="page-btn">
+                <a href="@routes.ProductController.add" class="btn btn-added">
+                    <img src="@routes.Assets.versioned("assets/img/icons/plus.svg")")" class="me-1" alt="img">Add Product
+                </a>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table  datanew">
+                        <thead>
+                        <tr>
+                            <th width="20px">
+                                <label class="checkboxs">
+                                    <input type="checkbox" id="select-all">
+                                    <span class="checkmarks"></span>
+                                </label>
+                            </th>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Brand</th>
+                            <th>Price</th>
+                            <th>Qty</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @for(product <- products) {
+                        <tr>
+                            <td>
+                                <label class="checkboxs">
+                                <input type="checkbox" id="select-all">
+                                <span class="checkmarks"></span>
+                                </label></td>
+                            <td>@product.id.getOrElse("-")</td>
+                            <td>@product.name</td>
+                            <td>@product.categoryName.getOrElse("Unknown") /
+                                @product.subCategoryName.getOrElse("Unknown")</td>
+                            <td>@product.brandName.getOrElse("Unknown")</td>
+                            <td>@product.price</td>
+                            <td>@product.quantity</td>
+                            <td>
+                                @if(product.status == "1") {
+                                Active
+                                } else {
+                                Inactive
+                                }
+                            </td>
+                            <td>
+                                Edit / Delete
+
+                            </td>
+                        </tr>
+                        }
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+}

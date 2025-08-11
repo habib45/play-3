@@ -7,6 +7,7 @@ import io.ebean.Finder;
 //import io.ebean.annotation.UpdatedTimestamp;
 import java.time.LocalDateTime;
 
+import io.ebean.annotation.NotNull;
 import jakarta.persistence.*;
 
 import play.data.validation.Constraints;
@@ -17,16 +18,21 @@ public class Category extends Model {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
 
-//  @Constraints.Required(message = "Name is required")
+    @NotNull
+    @Constraints.Required(message = "Name is required")
     @Column(nullable = false, length = 250)
     public String name;
 
     @Column(length = 255)
     public String description;
 
+    @NotNull
+    @Constraints.Required(message = "Category Code is required")
     @Column(unique = true, nullable = false, length = 50)
     public String code;
-    @Column(name = "image")
+
+
+    @Column(name = "image", nullable = true)
     public String image;
 
 //    @CreatedTimestamp
